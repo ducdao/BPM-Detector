@@ -7,4 +7,3 @@ a metronome. The purpose of this application is to provide a tool for concert an
 ing band conductors to detect their precise tempo while conducting. This will help them
 determine how well they are coordinating the band and whether they need to adjust their
 conducting.
-1
