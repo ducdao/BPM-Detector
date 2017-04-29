@@ -1,4 +1,4 @@
-# CPE 491 - BPM Detector
+# CPE 491 - BPM Detector (Android)
 
 The BPM Detector is an Android application that detects the tempo or beats-per-minute
 (BPM) for a band conductor's conducting. Generally, the conductor moves their arms in
