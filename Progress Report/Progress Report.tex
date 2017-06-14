@@ -1,0 +1,101 @@
+\documentclass[12pt]{article}
+
+% All the packages used.
+\usepackage[margin=1.0in]{geometry}
+\usepackage{pbox}
+\usepackage{array}
+\usepackage{graphicx}
+
+\begin{document}
+
+% Title page.
+\begin{center}
+  \vspace*{1in}
+  \textbf{\LARGE{BPM Detector (Android)}} \\
+  \large{Progress Report \\
+  Duc Dao \\
+  CPE 491, Spring 2017 \\
+  California Polytechnic State University, San Luis Obispo} \\
+\end{center}
+
+% Abstract. Must be around 100 to 200 words.
+\begin{center}
+  \vspace*{2in}
+  \textbf{Abstract} \\
+\end{center}
+The BPM Detector is an Android application that detects the tempo or beats-per-minute (BPM) for a band conductor's conducting. Generally, the conductor moves their arms in a predictable pattern in order to maintain the band's synchronization, acting similarly to a metronome. The purpose of this application is to provide a tool for concert and marching band conductors to detect their precise tempo while conducting. This will help them determine how well they are coordinating the band and whether they need to adjust their conducting.  
+
+\newpage
+
+\tableofcontents
+
+\newpage
+
+% ========================================================================================================================
+\section{Project Overview}
+
+The BPM Detector is an Android application that detects the tempo or beats-per-minute (BPM) for a band conductor's conducting. The application would require two components to function: an Android phone and an Android smartwatch. Both must have at least Android 6.0 Marshmallow.
+\\
+\\
+The phone acts as the main storage and graphic user interface (GUI) for the user. Due to the very natural of conducting music, users will not be able to monitor their tempo solely with just the watch as they will be moving their arms, making the smartwatch's screen difficult to read. The phone will keep a history of your previous conducting sessions with the ability to rename sessions so that each record has some meaning.
+\\
+\\
+The smartwatch acts as the sensor of the application, detecting movement using its accelerator and gyroscope to generate a BPM.
+\\
+\\
+Intended users for BPM Detector include band conductors, drum majors, and anyone else curious about their music conducting consistency.
+
+% ========================================================================================================================
+\section{Background}
+
+In the context of music ensembles, conducting is the act of directing the group in order to synchronize various components of the band and the performance. Members rely on the conductor to initiate the piece/song that they are performing, set the BPM/tempo of the song, cue points of interest in the piece, and other musical duties. 
+\\
+\\
+The purpose of BPM Detector is to provide a tool for conductor's to dynamically monitor and track their BPM. There are no mobile applications on any platform that automatically detect the conductor's BPM while they are conducting. Existing solutions on the Google Play Store have users tap on the screen to manually calculate the BPM and metronome applications only sound off the BPM by setting a certain tempo, or listen to the environment.
+\\
+\\
+The ultimate goal for BPM Detector is to help conductor's measure their ability to consistently conduct so that their bands can improve their tempo while performing.
+
+% ========================================================================================================================
+\section{CPE 491 Progress Overview}
+\begin{center}
+  \begin{tabular}{ |c|c|p{4in}| } 
+  \hline 
+  \multicolumn{3}{|c|}{\textbf{Spring Quarter 2017}} \\
+  \hline
+  \textbf{Week} & \textbf{Topic} & \textbf{Description} \\ 
+  \hline
+  1-2 & Background Research & Check and query for existing solutions. \\
+  \hline
+  3-4 & Requirements & Requirements gathering, Requirements Document. \\
+  \hline
+  5-6 & Hardware Repair & Repair Moto 360. \\
+  \hline 
+  7-10 & Iteration 1 & Learn Android. \\
+  \hline
+  \end{tabular}
+\end{center}
+
+\subsection{Week 1-2, Background Research}
+I queried about existing solutions similar to the description of BPM Detector with three professors from Cal Poly's Music Department: Professor Christopher Woodruff, Professor Andrew McMahan, and Professor David Arrivee. All three of them didn't know of any existing applications that had the functionality of BPM Detector. 
+\\
+\\
+Professor Woodruff exclaimed "I can see how that can be useful to assess the accuracy of conducting tempo and to practice various types of tempo changes!" This was a delight to hear seeing as how Professor Woodruff is the director for Cal Poly's marching band, an organization that's very requires precise tempo accuracy and fluid tempo changes. 
+\\
+\\
+On top of asking professors with the appropriate credentials, researching applications in the Google Play Store resulted in no application with a description like BPM Detector.
+
+\subsection{Week 3-4, Requirements}
+As a former drum major, requirements gathering required consolidating with my previous conducting experience along with keeping in mind different conducting patterns. Because of the range of tempos, BPM Detector needs to work for Larghissimo (about 24 BPM) to Prestissimo (over 200 BPM) while minimizing latency between the detection, BPM calculation, and viewing.
+
+\subsection{Week 5-6, Hardware Repair}
+During this time period, I attempted to fix the bottom half of my Moto 360's screen through screen replacement. Finding a replacement screen has been rather difficult because of the Moto 360's discontinuity. Because BPM Detector is a very kinesthetic application, I wanted a fully functional smartwatch to develop on instead of using an emulator in Android Studio.
+
+\subsection{Week 7-10, Learn Android}
+To better understand the Android framework, I utilized a tutorial on YouTube to implement a simple note application.
+
+% \includegraphics[width=\linewidth]{1.jpg}
+%  \caption{A boat.}
+%  \label{fig:boat1}
+%\end{figure}  
+\end{document}
