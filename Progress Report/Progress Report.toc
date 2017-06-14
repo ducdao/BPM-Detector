@@ -1,7 +1,0 @@
-\contentsline {section}{\numberline {1}Project Overview}{3}
-\contentsline {section}{\numberline {2}Background}{3}
-\contentsline {section}{\numberline {3}CPE 491 Progress Overview}{3}
-\contentsline {subsection}{\numberline {3.1}Week 1-2, Background Research}{4}
-\contentsline {subsection}{\numberline {3.2}Week 3-4, Requirements}{4}
-\contentsline {subsection}{\numberline {3.3}Week 5-6, Hardware Repair}{4}
-\contentsline {subsection}{\numberline {3.4}Week 7-10, Learn Android}{4}
