@@ -8,4 +8,4 @@ ing band conductors to detect their precise tempo while conducting. This will he
 determine how well they are coordinating the band and whether they need to adjust their
 conducting.
 
-BPM Detector was created for Duc Dao's senior project at (Cal Poly)[http://calpoly.edu/].
+BPM Detector was created for Duc Dao's senior project at [Cal Poly](http://calpoly.edu/).
