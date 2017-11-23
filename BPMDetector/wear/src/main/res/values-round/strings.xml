@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">BPM Detector</string>
+    <string name="detect">Detect</string>
+</resources>

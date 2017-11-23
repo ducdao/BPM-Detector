@@ -1,88 +1,117 @@
 package dao.duc.bpmdetector;
 
-import android.content.Intent;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.speech.RecognizerIntent;
-import android.support.wearable.activity.WearableActivity;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.List;
+import android.app.Activity;
+import android.hardware.Sensor;
 
-public class MainActivity extends WearableActivity {
+import java.text.DecimalFormat;
 
-    ListView listView;
-    @Override
-    // onCreate is the starting point for any activity
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        // Go to res > layout > activity_main.xml for UI, first thing user sees
-        setContentView(R.layout.activity_main);
+public class MainActivity extends Activity implements SensorEventListener {
+   private SensorManager mSensorManager;
+   private Sensor mLinearAcceleration;
 
-        // Go to our UI and look for something called "list_view"
-        listView = (ListView) findViewById(R.id.list_view);
+   final static int XAXIS = 0;
+   final static int YAXIS = 1;
+   final static int ZAXIS = 2;
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id){
-                if (position == 0) {
-                    displaySpeechScreen();
-                } else {
-                    Note note = (Note) parent.getItemAtPosition(position);
+   public double xAxis;
+   public double yAxis;
+   public double zAxis;
 
-                    Intent intent = new Intent(getApplicationContext(), DeleteActivity.class);
-                    intent.putExtra("id", note.getId());
+   private boolean detectionOn;
 
-                    startActivity(intent);
-                }
-            }
-        });
-        updateUI();
-    }
+   Button startButton;
+   TextView xAxisLabel;
+   TextView yAxisLabel;
+   TextView zAxisLabel;
 
-    @Override
-    public void onResume() {
-        super.onResume();
+   protected void onCreate(Bundle savedInstanceState) {
+      // Keep the Wear screen always on (for testing only!)
+      getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        updateUI();
-    }
+      detectionOn = false;
 
-    public void updateUI() {
-        ArrayList<Note> notes = Helper.getAllNotes(this);
+      super.onCreate(savedInstanceState);
+      setContentView(R.layout.activity_main);
 
-        notes.add(0, new Note("", ""));
+      this.mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+      this.mLinearAcceleration = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
-        listView.setAdapter(new ListViewAdapter(this, 0, notes));
-    }
+      // Link labels with view from UI
+      xAxisLabel = findViewById(R.id.xAxisView);
+      yAxisLabel = findViewById(R.id.yAxisView);
+      zAxisLabel = findViewById(R.id.zAxisView);
 
-    public void displaySpeechScreen() {
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "What is the title?");
+      // Set default value for axises
+      xAxis = 0;
+      yAxis = 0;
+      zAxis = 0;
 
-        // Start the activity, the intent will be populated with the speech text
-        // Create an activity that will return with data that I need
-        startActivityForResult(intent, 1001);
-    }
+      updateText();
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        // Successfully called data
-        if(requestCode == 1001 && resultCode == RESULT_OK) {
-            List<String> results = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+      setStartButton();
+   }
 
-            String message = results.get(0);
+   public void setStartButton() {
+      startButton = findViewById(R.id.detect_button);
+      startButton.setOnClickListener(new View.OnClickListener() {
+         @Override
+         public void onClick(View v) {
+            calcBPM();
+         }
+      });
 
-            Note note = new Note(null, message);
+      startButton.setText("DETECT");
+   }
 
-            Helper.saveNote(note, this);
+   protected void onResume() {
+      super.onResume();
+      mSensorManager.registerListener(this, mLinearAcceleration, SensorManager.SENSOR_DELAY_NORMAL);
+   }
 
-            Helper.displayConfirmation("Note saved!", this);
+   protected void onPause() {
+      super.onPause();
+      mSensorManager.unregisterListener(this);
+   }
 
-            updateUI();
-        }
-    }
+   public void onAccuracyChanged(Sensor sensor, int accuracy) {
+   }
+
+   public void onSensorChanged(SensorEvent event) {
+      xAxis = event.values[XAXIS];
+      yAxis = event.values[YAXIS];
+      zAxis = event.values[ZAXIS];
+
+      if (detectionOn)
+         updateText();
+   }
+
+   private void updateText() {
+      DecimalFormat formatter = new DecimalFormat("#0.00000");
+
+      String xDisplay = "X-Axis: " + formatter.format(xAxis) + "\n";
+      String yDisplay = "Y-Axis: " + formatter.format(yAxis) + "\n";
+      String zDisplay = "Z-Axis: " + formatter.format(zAxis) + "\n";
+
+      xAxisLabel.setText(xDisplay);
+      yAxisLabel.setText(yDisplay);
+      zAxisLabel.setText(zDisplay);
+   }
+
+   private void calcBPM() {
+      if (!detectionOn) {
+         detectionOn = true;
+      }
+      else {
+         detectionOn = false;
+      }
+   }
 }
