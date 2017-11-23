@@ -13,6 +13,7 @@ import android.app.Activity;
 import android.hardware.Sensor;
 
 import java.text.DecimalFormat;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity implements SensorEventListener {
    private SensorManager mSensorManager;
@@ -22,16 +23,21 @@ public class MainActivity extends Activity implements SensorEventListener {
    final static int YAXIS = 1;
    final static int ZAXIS = 2;
 
-   public double xAxis;
-   public double yAxis;
-   public double zAxis;
+   // Current linear acceleration in x, y, and z axises
+   private double xAxis;
+   private double yAxis;
+   private double zAxis;
+   private long startTime;
+   private long currentTime;
 
+   // Flag determining if calculation should start
    private boolean detectionOn;
 
-   Button startButton;
-   TextView xAxisLabel;
-   TextView yAxisLabel;
-   TextView zAxisLabel;
+   private Button startButton;
+   private TextView xAxisLabel;
+   private TextView yAxisLabel;
+   private TextView zAxisLabel;
+   private TextView totalAccelerationLabel;
 
    protected void onCreate(Bundle savedInstanceState) {
       // Keep the Wear screen always on (for testing only!)
@@ -49,6 +55,7 @@ public class MainActivity extends Activity implements SensorEventListener {
       xAxisLabel = findViewById(R.id.xAxisView);
       yAxisLabel = findViewById(R.id.yAxisView);
       zAxisLabel = findViewById(R.id.zAxisView);
+      totalAccelerationLabel = findViewById(R.id.totalAccelerationView);
 
       // Set default value for axises
       xAxis = 0;
@@ -89,9 +96,14 @@ public class MainActivity extends Activity implements SensorEventListener {
       xAxis = event.values[XAXIS];
       yAxis = event.values[YAXIS];
       zAxis = event.values[ZAXIS];
-
-      if (detectionOn)
+      
+      if (detectionOn) {
+         currentTime = event.timestamp - startTime;
          updateText();
+      }
+      else{
+         startTime = event.timestamp;
+      }
    }
 
    private void updateText() {
@@ -100,10 +112,13 @@ public class MainActivity extends Activity implements SensorEventListener {
       String xDisplay = "X-Axis: " + formatter.format(xAxis) + "\n";
       String yDisplay = "Y-Axis: " + formatter.format(yAxis) + "\n";
       String zDisplay = "Z-Axis: " + formatter.format(zAxis) + "\n";
+      String timeDisplay = Double.toString(TimeUnit.SECONDS.convert(startTime, TimeUnit.NANOSECONDS))
+              + " " + Double.toString(TimeUnit.MILLISECONDS.convert(currentTime, TimeUnit.NANOSECONDS));
 
       xAxisLabel.setText(xDisplay);
       yAxisLabel.setText(yDisplay);
       zAxisLabel.setText(zDisplay);
+      totalAccelerationLabel.setText(timeDisplay);
    }
 
    private void calcBPM() {
