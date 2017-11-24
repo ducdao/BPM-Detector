@@ -17,7 +17,6 @@
         android:textColor="@color/white"
         android:gravity="center"
         android:onClick="calcBPM"/>
-
     <TextView
         android:id="@+id/xAxisView"
         android:layout_width="wrap_content"
@@ -31,13 +30,19 @@
         android:textColor="@color/white"
         android:gravity="center"/>
     <TextView
-    android:id="@+id/zAxisView"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:textColor="@color/white"
-    android:gravity="center"/>
+        android:id="@+id/zAxisView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:gravity="center"/>
     <TextView
         android:id="@+id/totalAccelerationView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/white"
+        android:gravity="center"/>
+    <TextView
+        android:id="@+id/timesView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@color/white"
