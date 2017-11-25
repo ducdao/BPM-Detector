@@ -8,3 +8,14 @@ while conducting. This will help them determine how well they are coordinating t
 whether they need to adjust their conducting.
 
 BPM Detector was created for Duc Dao's senior project at [Cal Poly](http://calpoly.edu/).
+
+## Development Screenshots
+### Accelerometer X, Y, Z Values  
+![BPM-D screenshot](Screenshots/bpm1.png?raw=true)
+![BPM-D screenshot](Screenshots/bpm2.png?raw=true)
+### Start Detection Time + Duration of Detection
+![BPM-D screenshot](Screenshots/bpm3.png?raw=true)
+![BPM-D screenshot](Screenshots/bpm4.png?raw=true)
+### Total Acceleration
+![BPM-D screenshot](Screenshots/bpm5.png?raw=true)
+![BPM-D screenshot](Screenshots/bpm6.png?raw=true)
