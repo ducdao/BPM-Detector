@@ -16,7 +16,7 @@
         android:layout_height="wrap_content"
         android:textColor="@color/white"
         android:gravity="center"
-        android:onClick="calcBPM"/>
+        android:onClick="startDetection"/>
     <TextView
         android:id="@+id/xAxisView"
         android:layout_width="wrap_content"
