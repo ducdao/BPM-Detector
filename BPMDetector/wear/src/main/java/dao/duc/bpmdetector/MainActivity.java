@@ -14,11 +14,10 @@ import android.app.Activity;
 import android.hardware.Sensor;
 
 import java.text.DecimalFormat;
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.TreeMap;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity implements SensorEventListener/*,
@@ -30,6 +29,7 @@ public class MainActivity extends Activity implements SensorEventListener/*,
    final static int YAXIS = 1;
    final static int ZAXIS = 2;
    final static int SECONDS_PER_MINUTE = 60;
+   final static int LAST_N_SIZE = 15;
 
    private double xAxis;                      // Current linear acceleration in x axis
    private double yAxis;                      // Current linear acceleration in y axis
@@ -40,8 +40,8 @@ public class MainActivity extends Activity implements SensorEventListener/*,
 
    private double totalAcceleration;          // Total linear acceleration, calc-ed from axises
 
-   private Queue<Long> lastNTimes;            // Used to determine when to plot time in plot
-   private Queue<Double> lastNAccelerations; // Used to determine when to plot acceleration in plot
+   private List<Long> lastNTimes;             // Used to determine when to plot time in plot
+   private List<Double> lastNAccelerations;   // Used to determine when to plot acceleration in plot
    private Map<Long, Double> detectionPlot;   // Plot representing time vs acceleration
 
    private double averageInterval;            // Average interval between each beat
@@ -56,6 +56,7 @@ public class MainActivity extends Activity implements SensorEventListener/*,
    private TextView zAxisLabel;
    private TextView totalAccelerationLabel;
    private TextView timesLabel;
+   private TextView bpmLabel;
 
    //private GoogleApiClient mGoogleApiClient;
 
@@ -75,6 +76,7 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       zAxisLabel = findViewById(R.id.zAxisView);
       totalAccelerationLabel = findViewById(R.id.totalAccelerationView);
       timesLabel = findViewById(R.id.timesView);
+      bpmLabel = findViewById(R.id.bpmView);
 
       initializeGlobals();
 
@@ -93,11 +95,12 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       zAxis = 0;
       totalAcceleration = 0;
       averageInterval = 0;
+      bpm = 0;
       detectionOn = false;
 
-      lastNTimes = new ArrayBlockingQueue<Long>(20);
-      lastNAccelerations = new ArrayBlockingQueue<Double>(20);
-      detectionPlot = new TreeMap<Long, Double>();
+      lastNTimes = new ArrayList<>(LAST_N_SIZE);
+      lastNAccelerations = new ArrayList<>(LAST_N_SIZE);
+      detectionPlot = new TreeMap<>();
    }
 
    public void setStartButton() {
@@ -105,7 +108,7 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       startButton.setOnClickListener(new View.OnClickListener() {
          @Override
          public void onClick(View v) {
-            startDetection();
+            startDetection(v);
          }
       });
 
@@ -175,15 +178,31 @@ public class MainActivity extends Activity implements SensorEventListener/*,
          if (xAxis > .1 || yAxis > .1 || zAxis > .1) {
             totalAcceleration = calcTotalAcceleration();
 
-            // Save time and acceleration if it's a beat
-            if (isBeat(currentTime, totalAcceleration)) {
-               detectionPlot.put(currentTime, totalAcceleration);
+            // Add another point for beat detection
+            if (lastNTimes.size() < LAST_N_SIZE) {
+               lastNTimes.add(currentTime);
+               lastNAccelerations.add(totalAcceleration);
+
+               if (lastNTimes.size() == LAST_N_SIZE) {
+                  beatDetection(currentTime, totalAcceleration);
+               }
+            }
+            // Check last LAST_N_SIZE points and see if it's a beat
+            else {
+               lastNTimes.remove(currentTime);
+               lastNAccelerations.remove(totalAcceleration);
+
+               lastNTimes.add(currentTime);
+               lastNAccelerations.add(totalAcceleration);
+
+               beatDetection(currentTime, totalAcceleration);
             }
 
             Log.d("TOTAL ACCELERATION", Double.toString(totalAcceleration));
          }
 
          updateUI();
+         calcBPM();
       }
       else{
          startTime = event.timestamp;
@@ -191,19 +210,36 @@ public class MainActivity extends Activity implements SensorEventListener/*,
    }
 
    // TODO: Continue beat detection
-   private boolean isBeat(long time, double acceleration) {
-      lastNTimes.add(time);
-      lastNAccelerations.add(acceleration);
-
-      Iterator<Double> iter = lastNAccelerations.iterator();
-
-      while (iter.hasNext()) {
-         
-      }
-
-      if (false) {
+   private void beatDetection(long time, double acceleration) {
+      // Check for increasing total acceleration
+      if (!isIncreasing()) {
          lastNTimes.clear();
          lastNAccelerations.clear();
+
+         return;
+      }
+
+      detectionPlot.put(time, acceleration);
+   }
+
+   private boolean isIncreasing() {
+      double previous, current;
+
+      if (lastNAccelerations.size() > 0) {
+         previous = lastNAccelerations.get(0);
+      }
+      else {
+         return false;
+      }
+
+      for (int index = 1; index < lastNAccelerations.size(); index++) {
+            current = lastNAccelerations.get(index);
+
+            if (previous > current) {
+               return true;
+            }
+
+            previous = current;
       }
 
       return true;
@@ -217,18 +253,19 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       String zDisplay = "Z-Axis: " + formatter.format(zAxis);
       String totalAccelerationDisplay = "Total A: " + formatter.format(totalAcceleration);
       String timeDisplay = Double.toString(
-              TimeUnit.SECONDS.convert(startTime, TimeUnit.NANOSECONDS))
-              + " " +
+              TimeUnit.SECONDS.convert(startTime, TimeUnit.NANOSECONDS)) + " " +
               Double.toString(TimeUnit.MILLISECONDS.convert(currentTime, TimeUnit.NANOSECONDS));
+      String bpmDisplay = "BPM: " + Double.toString(bpm);
 
       xAxisLabel.setText(xDisplay);
       yAxisLabel.setText(yDisplay);
       zAxisLabel.setText(zDisplay);
       totalAccelerationLabel.setText(totalAccelerationDisplay);
       timesLabel.setText(timeDisplay);
+      bpmLabel.setText(bpmDisplay);
    }
 
-   private void startDetection() {
+   private void startDetection(View v) {
       if (!detectionOn) {
          detectionOn = true;
       }
@@ -242,22 +279,28 @@ public class MainActivity extends Activity implements SensorEventListener/*,
    }
 
    private void calcBPM() {
-      calcAverageInterval();
+      String bpmDisplay;
 
-      bpm = SECONDS_PER_MINUTE / averageInterval;
+      if (!detectionPlot.isEmpty()) {
+         calcAverageInterval();
+
+         bpm = SECONDS_PER_MINUTE / averageInterval;
+      }
+
+      bpmDisplay = "BPM: " + Double.toString(bpm);
+      bpmLabel.setText(bpmDisplay);
    }
 
    private void calcAverageInterval() {
-      long previousTime = 0;
-      long currentTime = 0;
+      long previousTime = -1;
       long interval;
       long totalInterval = 0;
 
       // Get all the times in plot
-      for (Long time : detectionPlot.keySet()) {
+      for (Long currentTime : detectionPlot.keySet()) {
          // Read first time in plot
-         if (previousTime == 0) {
-            previousTime = time;
+         if (previousTime == -1) {
+            previousTime = currentTime;
          }
          // Subsequent times in plot
          else {
@@ -267,6 +310,6 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       }
 
       // Number of intervals = detectionPlot.size() - 1
-      averageInterval = totalInterval / detectionPlot.size() - 1;
+      averageInterval = totalInterval / (detectionPlot.size());
    }
 }
