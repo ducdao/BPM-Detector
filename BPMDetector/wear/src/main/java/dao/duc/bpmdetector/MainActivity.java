@@ -67,10 +67,11 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       super.onCreate(savedInstanceState);
       setContentView(R.layout.activity_main);
 
+      // Connect to accelerometer for linear acceleration
       this.mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
       this.mLinearAcceleration = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
-      // Link labels with view from UI
+      // Link labels with TextViews from activity_main.xml
       xAxisLabel = findViewById(R.id.xAxisView);
       yAxisLabel = findViewById(R.id.yAxisView);
       zAxisLabel = findViewById(R.id.zAxisView);
@@ -274,13 +275,16 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       }
    }
 
+   // Total acceleration is the square root of the sum of the squares of each axis
    private double calcTotalAcceleration() {
       return Math.sqrt((Math.pow(xAxis, 2) + Math.pow(yAxis, 2) + Math.pow(zAxis, 2)));
    }
 
+   // Calculate the beats-per-minute, the number of intervals that can occur in 60 seconds
    private void calcBPM() {
       String bpmDisplay;
 
+      // Compute bpm only beats are detected
       if (!detectionPlot.isEmpty()) {
          calcAverageInterval();
 
@@ -291,6 +295,7 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       bpmLabel.setText(bpmDisplay);
    }
 
+   // Helper method for calcBPM(), used to get the interval between beat beat
    private void calcAverageInterval() {
       long previousTime = -1;
       long interval;
