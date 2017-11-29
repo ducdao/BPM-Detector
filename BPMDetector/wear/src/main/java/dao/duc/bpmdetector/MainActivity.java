@@ -1,5 +1,7 @@
 package dao.duc.bpmdetector;
 
+import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
@@ -20,8 +22,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends Activity implements SensorEventListener/*,
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener*/ {
+public class MainActivity extends Activity implements SensorEventListener {
    private SensorManager mSensorManager;
    private Sensor mLinearAcceleration;
 
@@ -51,14 +52,12 @@ public class MainActivity extends Activity implements SensorEventListener/*,
 
    // UI elements
    private Button startButton;
-   private TextView xAxisLabel;
-   private TextView yAxisLabel;
-   private TextView zAxisLabel;
+   //private TextView xAxisLabel;
+   //private TextView yAxisLabel;
+   //private TextView zAxisLabel;
    private TextView totalAccelerationLabel;
    private TextView timesLabel;
    private TextView bpmLabel;
-
-   //private GoogleApiClient mGoogleApiClient;
 
    protected void onCreate(Bundle savedInstanceState) {
       // Keep the Wear screen always on (for testing only!)
@@ -72,22 +71,16 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       this.mLinearAcceleration = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
       // Link labels with TextViews from activity_main.xml
-      xAxisLabel = findViewById(R.id.xAxisView);
-      yAxisLabel = findViewById(R.id.yAxisView);
-      zAxisLabel = findViewById(R.id.zAxisView);
+      //xAxisLabel = findViewById(R.id.xAxisView);
+      //yAxisLabel = findViewById(R.id.yAxisView);
+      //zAxisLabel = findViewById(R.id.zAxisView);
       totalAccelerationLabel = findViewById(R.id.totalAccelerationView);
       timesLabel = findViewById(R.id.timesView);
       bpmLabel = findViewById(R.id.bpmView);
 
       initializeGlobals();
-
       updateUI();
-      setStartButton();
-      /*mGoogleApiClient = new GoogleApiClient.Builder(this)
-              .addApi(Wearable.API)
-              .addConnectionCallbacks(this)
-              .addOnConnectionFailedListener(this)
-              .build();*/
+      initializeStartButton();
    }
 
    public void initializeGlobals() {
@@ -104,7 +97,7 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       detectionPlot = new TreeMap<>();
    }
 
-   public void setStartButton() {
+   public void initializeStartButton() {
       startButton = findViewById(R.id.detect_button);
       startButton.setOnClickListener(new View.OnClickListener() {
          @Override
@@ -113,21 +106,16 @@ public class MainActivity extends Activity implements SensorEventListener/*,
          }
       });
 
-      startButton.setText("DETECT");
+      setButtonAttributes(startButton, "DETECT", "#212121");
    }
 
-   // Connect to the data layer when the Activity starts
-   /*@Override
-   protected void onStart() {
-      super.onStart();
-      mGoogleApiClient.connect();
-   }*/
+   public void setButtonAttributes(Button button, String buttonText, String hexColor) {
+      button.getBackground().setColorFilter(Color.parseColor(hexColor), PorterDuff.Mode.MULTIPLY);
+      button.setText(buttonText);
+      button.setAllCaps(true);
+   }
 
    protected void onResume() {
-      /*if (null != mGoogleApiClient && !mGoogleApiClient.isConnected()) {
-         mGoogleApiClient.connect();
-      }*/
-
       super.onResume();
       mSensorManager.registerListener(this, mLinearAcceleration,
               SensorManager.SENSOR_DELAY_NORMAL);
@@ -137,30 +125,6 @@ public class MainActivity extends Activity implements SensorEventListener/*,
       super.onPause();
       mSensorManager.unregisterListener(this);
    }
-   /*
-   @Override
-   protected void onStop() {
-      if (null != mGoogleApiClient && mGoogleApiClient.isConnected()) {
-         mGoogleApiClient.disconnect();
-      }
-
-      super.onStop();
-   }
-
-   @Override
-   public void onConnected(@Nullable Bundle bundle) {
-      Log.d(TAG, "Connected successfully");
-   }
-
-   @Override
-   public void onConnectionSuspended(int i) {
-      Log.d(TAG, "Connection suspended");
-   }
-
-   @Override
-   public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-      Log.d(TAG, "Connection failed");
-   }*/
 
    public void onAccuracyChanged(Sensor sensor, int accuracy) {
    }
@@ -224,23 +188,23 @@ public class MainActivity extends Activity implements SensorEventListener/*,
    }
 
    private boolean isIncreasing() {
-      double previous, current;
+      double previousAcceleration, currentAcceleration;
 
       if (lastNAccelerations.size() > 0) {
-         previous = lastNAccelerations.get(0);
+         previousAcceleration = lastNAccelerations.get(0);
       }
       else {
          return false;
       }
 
       for (int index = 1; index < lastNAccelerations.size(); index++) {
-            current = lastNAccelerations.get(index);
+         currentAcceleration = lastNAccelerations.get(index);
 
-            if (previous > current) {
+            if (previousAcceleration > currentAcceleration) {
                return true;
             }
 
-            previous = current;
+         previousAcceleration = currentAcceleration;
       }
 
       return true;
@@ -249,28 +213,35 @@ public class MainActivity extends Activity implements SensorEventListener/*,
    private void updateUI() {
       DecimalFormat formatter = new DecimalFormat("#0.00000");
 
-      String xDisplay = "X-Axis: " + formatter.format(xAxis);
-      String yDisplay = "Y-Axis: " + formatter.format(yAxis);
-      String zDisplay = "Z-Axis: " + formatter.format(zAxis);
       String totalAccelerationDisplay = "Total A: " + formatter.format(totalAcceleration);
-      String timeDisplay = Double.toString(
-              TimeUnit.SECONDS.convert(startTime, TimeUnit.NANOSECONDS)) + " " +
-              Double.toString(TimeUnit.MILLISECONDS.convert(currentTime, TimeUnit.NANOSECONDS));
+      String timeDisplay = "Time: " +
+         Double.toString(TimeUnit.MILLISECONDS.
+         convert(currentTime, TimeUnit.NANOSECONDS) / 1000.000) + "s";
       String bpmDisplay = "BPM: " + Double.toString(bpm);
 
-      xAxisLabel.setText(xDisplay);
-      yAxisLabel.setText(yDisplay);
-      zAxisLabel.setText(zDisplay);
       totalAccelerationLabel.setText(totalAccelerationDisplay);
       timesLabel.setText(timeDisplay);
       bpmLabel.setText(bpmDisplay);
    }
 
+   // Debugging method that prints the X, Y, and Z values
+   private void printXYZUI() {
+      //String xDisplay = "X-Axis: " + formatter.format(xAxis);
+      //String yDisplay = "Y-Axis: " + formatter.format(yAxis);
+      //String zDisplay = "Z-Axis: " + formatter.format(zAxis);
+
+      //xAxisLabel.setText(xDisplay);
+      //yAxisLabel.setText(yDisplay);
+      //zAxisLabel.setText(zDisplay);
+   }
+
    private void startDetection(View v) {
       if (!detectionOn) {
+         setButtonAttributes(startButton, "STOP", "#F44336");
          detectionOn = true;
       }
       else {
+         setButtonAttributes(startButton, "DETECT", "#212121");
          detectionOn = false;
       }
    }

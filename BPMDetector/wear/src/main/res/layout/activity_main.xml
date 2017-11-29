@@ -17,7 +17,7 @@
         android:textColor="@color/white"
         android:gravity="center"
         android:onClick="startDetection"/>
-    <TextView
+    <!--<TextView
         android:id="@+id/xAxisView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -37,7 +37,7 @@
         android:layout_height="wrap_content"
         android:textColor="@color/white"
         android:gravity="center"
-        android:textSize="10sp"/>
+        android:textSize="10sp"/>-->
     <TextView
         android:id="@+id/totalAccelerationView"
         android:layout_width="wrap_content"

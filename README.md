@@ -19,3 +19,9 @@ BPM Detector was created for Duc Dao's senior project at [Cal Poly](http://calpo
 ### Calculated Total Acceleration
 ![BPM-D screenshot](Screenshots/bpm5.png?raw=true)
 ![BPM-D screenshot](Screenshots/bpm6.png?raw=true)
+### Started BPM Calculation
+![BPM-D screenshot](Screenshots/bpm7.png?raw=true)
+### Removed X, Y, Z Values from UI
+![BPM-D screenshot](Screenshots/bpm8.png?raw=true)
+![BPM-D screenshot](Screenshots/bpm9.png?raw=true)
+![BPM-D screenshot](Screenshots/bpm10.png?raw=true)
