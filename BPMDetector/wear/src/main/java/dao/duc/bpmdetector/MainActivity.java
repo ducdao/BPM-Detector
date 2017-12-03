@@ -16,10 +16,11 @@ import android.app.Activity;
 import android.hardware.Sensor;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends Activity implements SensorEventListener {
@@ -29,26 +30,27 @@ public class MainActivity extends Activity implements SensorEventListener {
    final static int XAXIS = 0;
    final static int YAXIS = 1;
    final static int ZAXIS = 2;
-   final static int SECONDS_PER_MINUTE = 60;
+   final static double SECONDS_PER_MINUTE = 60.0;
    final static int LAST_N_SIZE = 15;
 
-   private double xAxis;                      // Current linear acceleration in x axis
-   private double yAxis;                      // Current linear acceleration in y axis
-   private double zAxis;                      // Current linear acceleration in z axis
+   private double xAxis; // Current linear acceleration in x axis
+   private double yAxis; // Current linear acceleration in y axis
+   private double zAxis; // Current linear acceleration in z axis
 
-   private long startTime;                    // When detection was started
-   private long currentTime;                  // Time when sensor detected change
+   private long startTime;   // When detection was started
+   private long currentTime; // Time when sensor detected change
 
-   private double totalAcceleration;          // Total linear acceleration, calc-ed from axises
+   private double totalAcceleration; // Total linear acceleration, calc-ed from axises
 
-   private List<Long> lastNTimes;             // Used to determine when to plot time in plot
-   private List<Double> lastNAccelerations;   // Used to determine when to plot acceleration in plot
-   private Map<Long, Double> detectionPlot;   // Plot representing time vs acceleration
+   private ArrayBlockingQueue<Long> lastTimes;           // Used to determine when to plot time in plot
+   private ArrayBlockingQueue<Double> lastAccelerations; // Used to determine when to plot acceleration in plot
+   private Map<Long, Double> peeksMap;              // Plot representing time vs acceleration
 
-   private double averageInterval;            // Average interval between each beat
-   private double bpm;                        // Beats per minute
+   private double totalInterval;
+   private double averageInterval; // Average interval between each beat
+   private double bpm;             // Beats per minute
 
-   private boolean detectionOn;               // Flag determining if calculation should start
+   private boolean detectionOn; // Flag determining if calculation should start
 
    // UI elements
    private Button startButton;
@@ -88,13 +90,14 @@ public class MainActivity extends Activity implements SensorEventListener {
       yAxis = 0;
       zAxis = 0;
       totalAcceleration = 0;
+      totalInterval = 0;
       averageInterval = 0;
       bpm = 0;
       detectionOn = false;
 
-      lastNTimes = new ArrayList<>(LAST_N_SIZE);
-      lastNAccelerations = new ArrayList<>(LAST_N_SIZE);
-      detectionPlot = new TreeMap<>();
+      lastTimes = new ArrayBlockingQueue(LAST_N_SIZE);
+      lastAccelerations = new ArrayBlockingQueue(LAST_N_SIZE);
+      peeksMap = new TreeMap<>();
    }
 
    public void initializeStartButton() {
@@ -139,75 +142,88 @@ public class MainActivity extends Activity implements SensorEventListener {
 
          currentTime = event.timestamp - startTime;
 
-         // Movement gate so to prevent unnecessary calculations
+         // Movement gate to prevent unnecessary calculations
          if (xAxis > .1 || yAxis > .1 || zAxis > .1) {
             totalAcceleration = calcTotalAcceleration();
 
-            // Add another point for beat detection
-            if (lastNTimes.size() < LAST_N_SIZE) {
-               lastNTimes.add(currentTime);
-               lastNAccelerations.add(totalAcceleration);
-
-               if (lastNTimes.size() == LAST_N_SIZE) {
-                  beatDetection(currentTime, totalAcceleration);
-               }
+            // Add to time and acceleration to temporary queue for processing
+            try {
+               addToProcessingQueues(currentTime, totalAcceleration);
             }
-            // Check last LAST_N_SIZE points and see if it's a beat
-            else {
-               lastNTimes.remove(currentTime);
-               lastNAccelerations.remove(totalAcceleration);
-
-               lastNTimes.add(currentTime);
-               lastNAccelerations.add(totalAcceleration);
-
-               beatDetection(currentTime, totalAcceleration);
+            catch (InterruptedException e) {
+               e.printStackTrace();
             }
 
-            Log.d("TOTAL ACCELERATION", Double.toString(totalAcceleration));
+            //Log.d("TOTAL ACCELERATION", Double.toString(totalAcceleration));
+            calcBPM();
          }
 
          updateUI();
-         calcBPM();
       }
       else{
          startTime = event.timestamp;
       }
    }
 
-   // TODO: Continue beat detection
-   private void beatDetection(long time, double acceleration) {
-      // Check for increasing total acceleration
-      if (!isIncreasing()) {
-         lastNTimes.clear();
-         lastNAccelerations.clear();
-
-         return;
+   private void addToProcessingQueues(long time, double acceleration) throws InterruptedException {
+      // Add another point for beat detection
+      try {
+         lastTimes.add(time);
+         lastAccelerations.add(acceleration);
       }
-
-      detectionPlot.put(time, acceleration);
+      // Remove time and its acceleration from queue to make room for new one
+      catch (IllegalStateException e) {
+         e.printStackTrace();
+      }
+      // Run beat detection only if the queue is full
+      finally {
+         if (lastTimes.remainingCapacity() == 0) {
+            beatDetection(time, acceleration);
+         }
+      }
    }
 
-   private boolean isIncreasing() {
-      double previousAcceleration, currentAcceleration;
-
-      if (lastNAccelerations.size() > 0) {
-         previousAcceleration = lastNAccelerations.get(0);
-      }
-      else {
-         return false;
+   private void beatDetection(long time, double acceleration) {
+      if (isPeek()) {
+         peeksMap.put(time, acceleration);
       }
 
-      for (int index = 1; index < lastNAccelerations.size(); index++) {
-         currentAcceleration = lastNAccelerations.get(index);
+      // Remove queue's head to make room for another addition
+      if (lastTimes.poll() == null || lastAccelerations.poll() == null) {
+         Log.d("POLL", "Removing value from queue results in null");
+      }
+   }
 
-            if (previousAcceleration > currentAcceleration) {
-               return true;
-            }
+   // TODO: Continue peek detection
+   private boolean isPeek() {
+      // Convert queue to ArrayList so we can iterate through it
+      List<Double> accelerations = Arrays.asList(lastAccelerations.toArray(new Double[0]));
+      double previousAcceleration, currentAcceleration, nextAcceleration;
 
-         previousAcceleration = currentAcceleration;
+      // Start at one so that the previous acceleration is the first one
+      for (int index = 1; index < accelerations.size(); index++) {
+         previousAcceleration = accelerations.get(index - 1);
+         currentAcceleration = accelerations.get(index);
+
+         Log.d("CURRENT ACCELERATION", Double.toString(currentAcceleration));
+
+         // Set next acceleration only if it's not the last one
+         if (index < accelerations.size() - 1) {
+            nextAcceleration = accelerations.get(index + 1);
+         }
+         // Reached end of list, peek not found
+         else {
+            return false;
+         }
+
+         // Look for peek
+         if (currentAcceleration > previousAcceleration && currentAcceleration > nextAcceleration) {
+            Log.d("PEEK", "Found peek of " + Double.toString(currentAcceleration));
+            return true;
+         }
       }
 
-      return true;
+      return false;
    }
 
    private void updateUI() {
@@ -253,39 +269,41 @@ public class MainActivity extends Activity implements SensorEventListener {
 
    // Calculate the beats-per-minute, the number of intervals that can occur in 60 seconds
    private void calcBPM() {
-      String bpmDisplay;
-
       // Compute bpm only beats are detected
-      if (!detectionPlot.isEmpty()) {
+      if (!peeksMap.isEmpty()) {
          calcAverageInterval();
 
          bpm = SECONDS_PER_MINUTE / averageInterval;
+         Log.d("AVERAGE INTERVAL", Double.toString(this.averageInterval));
+         Log.d("BPM", Double.toString(bpm));
       }
-
-      bpmDisplay = "BPM: " + Double.toString(bpm);
-      bpmLabel.setText(bpmDisplay);
    }
 
    // Helper method for calcBPM(), used to get the interval between beat beat
    private void calcAverageInterval() {
-      long previousTime = -1;
+      boolean previousTimeSet = false;
+      long previousTime = 0;
       long interval;
-      long totalInterval = 0;
 
       // Get all the times in plot
-      for (Long currentTime : detectionPlot.keySet()) {
+      for (Long currentTime : peeksMap.keySet()) {
          // Read first time in plot
-         if (previousTime == -1) {
+         if (!previousTimeSet) {
             previousTime = currentTime;
+            previousTimeSet = true;
          }
          // Subsequent times in plot
          else {
             interval = currentTime - previousTime;
+            previousTime = currentTime;
+
             totalInterval += interval;
          }
       }
 
-      // Number of intervals = detectionPlot.size() - 1
-      averageInterval = totalInterval / (detectionPlot.size());
+      Log.d("DETECTION PLOT SIZE", Double.toString(peeksMap.size()));
+
+      // Number of intervals = peeksMap.size() - 1
+       averageInterval = totalInterval / (peeksMap.size() - 1);
    }
 }
