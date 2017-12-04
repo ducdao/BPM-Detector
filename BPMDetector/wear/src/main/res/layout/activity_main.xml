@@ -1,106 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:background="@color/dark_blue"
-    tools:context="dao.duc.bpmdetector.MainActivity"
-    tools:deviceIds="wear">
+    android:background="@color/dark_blue">
 
-    <Button
-        android:id="@+id/detect_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        android:gravity="center"
-        android:onClick="startDetection"/>
-    <!--<TextView
-        android:id="@+id/xAxisView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        android:gravity="center"
-        android:textSize="10sp"/>
-    <TextView
-        android:id="@+id/yAxisView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        android:gravity="center"
-        android:textSize="10sp"/>
-    <TextView
-        android:id="@+id/zAxisView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        android:gravity="center"
-        android:textSize="10sp"/>-->
-    <TextView
-        android:id="@+id/totalAccelerationView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        android:gravity="center"/>
-    <TextView
-        android:id="@+id/timesView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        android:gravity="center"/>
-    <TextView
-        android:id="@+id/bpmView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textColor="@color/white"
-        android:gravity="center"
-        android:textSize="18sp"/>
-
-    <!--<FrameLayout
-        android:id="@+id/activity_main"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:padding="@dimen/inner_frame_layout_padding"
+        android:orientation="vertical"
+        android:gravity="center"
         android:background="@color/dark_blue"
-        app:boxedEdges="all">-->
+        tools:context="dao.duc.bpmdetector.MainActivity"
+        tools:deviceIds="wear">
 
-       <!--<android.support.wearable.view.WatchViewStub
-           android:layout_width="match_parent"
-           android:layout_height="match_parent">
-        <TextView
-            android:id="@+id/step_count"
+        <Button
+            android:id="@+id/detect_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true" />
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:onClick="startDetection"/>
         <TextView
-            android:id="@+id/step_detect"
+            android:id="@+id/totalAccelerationView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true" />
+            android:textColor="@color/white"
+            android:gravity="center"/>
         <TextView
-            android:id="@+id/heart"
+            android:id="@+id/timesView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true" />-->
-        <!--<android.support.wear.widget.drawer.WearableNavigationDrawerView
-            android:id="@+id/top_navigation_drawer"
+            android:textColor="@color/white"
+            android:gravity="center"/>
+        <TextView
+            android:id="@+id/bpmView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            android:gravity="center"
+            android:textSize="18sp"/>
+
+        <android.support.wear.widget.WearableRecyclerView
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/recyclerLauncherView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/dark_blue"
-            app:boxedEdges="all"
-            app:navigationStyle="singlePage" >-->
-
-
-
-    <!--<ImageButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="@color/dark_blue"
-            android:src="@drawable/ic_audiotrack_white_24dp"
-            android:text="@string/detect"
-            android:onClick="calcBPM"/>-->
+            android:scrollbars="vertical">
+            <TextView
+                android:id="@+id/detectionView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:gravity="center"
+                android:textSize="14sp"/>
+        </android.support.wear.widget.WearableRecyclerView>
+    </LinearLayout>
 </ScrollView>
 

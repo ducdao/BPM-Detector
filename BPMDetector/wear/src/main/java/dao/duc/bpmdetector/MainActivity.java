@@ -8,6 +8,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.wear.widget.WearableRecyclerView;
+import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -25,7 +27,7 @@ import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-public class MainActivity extends Activity implements SensorEventListener {
+public class MainActivity extends WearableActivity implements SensorEventListener {
    private SensorManager mSensorManager;
    private Sensor mLinearAcceleration;
 
@@ -33,7 +35,7 @@ public class MainActivity extends Activity implements SensorEventListener {
    final static int YAXIS = 1;
    final static int ZAXIS = 2;
    final static double SECONDS_PER_MINUTE = 60.0;
-   final static int LAST_N_SIZE = 15;
+   final static int LAST_N_SIZE = 5;
 
    private double xAxis; // Current linear acceleration in x axis
    private double yAxis; // Current linear acceleration in y axis
@@ -53,6 +55,7 @@ public class MainActivity extends Activity implements SensorEventListener {
    private double bpm;             // Beats per minute
 
    private boolean detectionOn; // Flag determining if calculation should start
+   private boolean save;        // Whether to save the latest detection or not
 
    // UI elements
    private Button startButton;
@@ -62,6 +65,8 @@ public class MainActivity extends Activity implements SensorEventListener {
    private TextView totalAccelerationLabel;
    private TextView timesLabel;
    private TextView bpmLabel;
+
+   private WearableRecyclerView pastDetections;
 
    protected void onCreate(Bundle savedInstanceState) {
       // Keep the Wear screen always on (for testing only!)
@@ -82,9 +87,22 @@ public class MainActivity extends Activity implements SensorEventListener {
       timesLabel = findViewById(R.id.timesView);
       bpmLabel = findViewById(R.id.bpmView);
 
+      pastDetections = findViewById(R.id.recyclerLauncherView);
+
       initializeGlobals();
-      updateUI();
       initializeStartButton();
+      updateUI();
+   }
+
+   public void onActivityResult(int requestCode, int resultCode, Intent data) {
+      super.onActivityResult(requestCode, resultCode, data);
+
+      // Get user's choice on whether to save the latest detection information
+      if (requestCode == 1 && resultCode == RESULT_OK) {
+         data.getBooleanExtra("save", save);
+      }
+
+      Log.d("SAVE", Boolean.toString(save));
    }
 
    public void initializeGlobals() {
@@ -168,6 +186,7 @@ public class MainActivity extends Activity implements SensorEventListener {
             totalAcceleration = 0;
          }
 
+         Log.d("UP", "DATE");
          updateUI();
       }
       else{
@@ -267,9 +286,9 @@ public class MainActivity extends Activity implements SensorEventListener {
          detectionOn = true;
       }
       else {
+         startActivity(new Intent(MainActivity.this, ConfirmationActivity.class));
          setButtonAttributes(startButton, "DETECT", "#212121");
          detectionOn = false;
-         startActivity(new Intent(MainActivity.this, ConfirmationActivity.class));
       }
    }
 
@@ -363,15 +382,14 @@ public class MainActivity extends Activity implements SensorEventListener {
 
          // Distance between current value and average is enough standard deviations (threshold) away
          if (Math.abs(accelerations.get(index) - avgFilter.get(index - 1)) > threshold * stdFilter.get(index - 1)) {
-            // Positive signal
+            // Found a peek
             if (accelerations.get(index) > avgFilter.get(index - 1)) {
-               // Found a peek
                Log.d("PEEK", Double.toString(accelerations.get(index)));
                peeks.put(times.get(index), accelerations.get(index));
             }
 
-            // Lower influence
-            filteredY.add(index, influence * accelerations.get(index) + (1 - influence) * filteredY.get(index - 1));
+            // Filter this signal using influence
+            filteredY.add(index, (influence * accelerations.get(index)) + ((1 - influence) * filteredY.get(index - 1)));
          } else {
             filteredY.set(index, accelerations.get(index));
          }

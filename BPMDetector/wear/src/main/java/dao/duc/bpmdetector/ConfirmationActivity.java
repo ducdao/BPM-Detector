@@ -1,6 +1,7 @@
 package dao.duc.bpmdetector;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.os.Bundle;
@@ -15,6 +16,8 @@ import android.widget.Button;
 public class ConfirmationActivity extends Activity {
    private Button yesButton;
    private Button noButton;
+   private Intent intent;
+   private boolean save;
 
    protected void onCreate(Bundle savedInstanceState) {
       super.onCreate(savedInstanceState);
@@ -23,29 +26,27 @@ public class ConfirmationActivity extends Activity {
       yesButton = findViewById(R.id.yesButton);
       noButton = findViewById(R.id.noButton);
 
-      setButtonAttributes(yesButton, "YES", "#4CAF50");
-      setButtonAttributes(noButton, "NO", "#F44336");
+      initializeButton(yesButton, "YES", "#4CAF50", true);
+      initializeButton(noButton, "NO", "#F44336", false);
+   }
 
-      yesButton.setOnClickListener(new View.OnClickListener() {
+   private void initializeButton(Button button, String text, String hexColor, boolean save) {
+      new MainActivity().setButtonAttributes(button, text, hexColor);
+
+      this.save = save;
+
+      button.setOnClickListener(new View.OnClickListener() {
          @Override
          public void onClick(View view) {
-            Log.d("CONFIRMATION", "SAVING");
-            finish();
-         }
-      });
-
-      noButton.setOnClickListener(new View.OnClickListener() {
-         @Override
-         public void onClick(View view) {
-            Log.d("CONFIRMATION", "NOT SAVING");
-            finish();
+            buttonAction();
          }
       });
    }
 
-   public void setButtonAttributes(Button button, String buttonText, String hexColor) {
-      button.getBackground().setColorFilter(Color.parseColor(hexColor), PorterDuff.Mode.MULTIPLY);
-      button.setText(buttonText);
-      button.setAllCaps(true);
+   // Send user's option back to parent activity
+   private void buttonAction() {
+      intent = new Intent();
+      intent.putExtra("save", save);
+      finish();
    }
 }
