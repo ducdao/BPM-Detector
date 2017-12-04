@@ -32,6 +32,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".ConfirmationActivity"
+            android:label="BPM Detector">
+        </activity>
     </application>
 
 </manifest>

@@ -2,6 +2,7 @@ package dao.duc.bpmdetector;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -55,13 +56,13 @@ public class MainActivity extends AppCompatActivity {
       @Override
       public void onCreate() {
          // I can see this fires properly on the Android mobile phone
-         Logger.d(TAG, "onCreate");
+         Log.d(TAG, "onCreate");
       }
 
       @Override
       public void onDataChanged(DataEventBuffer dataEvents) {
          // This never fires on the Android mobile phone, even though Wear says data was sent successfully
-         Logger.d(TAG, "on change");
+         Log.d(TAG, "on change");
       }
    }
 }

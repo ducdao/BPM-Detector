@@ -1,10 +1,12 @@
 package dao.duc.bpmdetector;
 
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,10 +18,10 @@ import android.app.Activity;
 import android.hardware.Sensor;
 
 import java.text.DecimalFormat;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -44,9 +46,9 @@ public class MainActivity extends Activity implements SensorEventListener {
 
    private ArrayBlockingQueue<Long> lastTimes;           // Used to determine when to plot time in plot
    private ArrayBlockingQueue<Double> lastAccelerations; // Used to determine when to plot acceleration in plot
-   private Map<Long, Double> peeksMap;              // Plot representing time vs acceleration
+   private LinkedHashMap<Long, Double> graphMap;         // Graph representing all values in time vs acceleration
+   private LinkedHashMap<Long, Double> peeksMap;         // Graph representing peek time vs acceleration
 
-   private double totalInterval;
    private double averageInterval; // Average interval between each beat
    private double bpm;             // Beats per minute
 
@@ -90,14 +92,14 @@ public class MainActivity extends Activity implements SensorEventListener {
       yAxis = 0;
       zAxis = 0;
       totalAcceleration = 0;
-      totalInterval = 0;
-      averageInterval = 0;
+      averageInterval = -1;
       bpm = 0;
       detectionOn = false;
 
       lastTimes = new ArrayBlockingQueue(LAST_N_SIZE);
       lastAccelerations = new ArrayBlockingQueue(LAST_N_SIZE);
-      peeksMap = new TreeMap<>();
+      graphMap = new LinkedHashMap<>();
+      peeksMap = new LinkedHashMap<>();
    }
 
    public void initializeStartButton() {
@@ -145,17 +147,25 @@ public class MainActivity extends Activity implements SensorEventListener {
          // Movement gate to prevent unnecessary calculations
          if (xAxis > .1 || yAxis > .1 || zAxis > .1) {
             totalAcceleration = calcTotalAcceleration();
+            graphMap.put(currentTime, totalAcceleration);
 
-            // Add to time and acceleration to temporary queue for processing
-            try {
-               addToProcessingQueues(currentTime, totalAcceleration);
-            }
-            catch (InterruptedException e) {
-               e.printStackTrace();
+            // Start beat detection and find peeks
+            if (graphMap.size() > LAST_N_SIZE) {
+               Log.d("TOTAL ACCELERATION", Double.toString(totalAcceleration) + " " + Double.toString(currentTime));
+
+               BeatDetectionTask beatDetectionTask = new BeatDetectionTask(this.graphMap, this.peeksMap);
+               beatDetectionTask.execute();
+
+               peeksMap = new LinkedHashMap<>(beatDetectionTask.peeks);
+               graphMap.clear();
+               calcBPM();
             }
 
             //Log.d("TOTAL ACCELERATION", Double.toString(totalAcceleration));
-            calcBPM();
+         }
+         // Not moving
+         else {
+            totalAcceleration = 0;
          }
 
          updateUI();
@@ -165,7 +175,7 @@ public class MainActivity extends Activity implements SensorEventListener {
       }
    }
 
-   private void addToProcessingQueues(long time, double acceleration) throws InterruptedException {
+   /*private void addToProcessingQueues(long time, double acceleration) throws InterruptedException {
       // Add another point for beat detection
       try {
          lastTimes.add(time);
@@ -224,7 +234,7 @@ public class MainActivity extends Activity implements SensorEventListener {
       }
 
       return false;
-   }
+   }*/
 
    private void updateUI() {
       DecimalFormat formatter = new DecimalFormat("#0.00000");
@@ -259,6 +269,7 @@ public class MainActivity extends Activity implements SensorEventListener {
       else {
          setButtonAttributes(startButton, "DETECT", "#212121");
          detectionOn = false;
+         startActivity(new Intent(MainActivity.this, ConfirmationActivity.class));
       }
    }
 
@@ -283,7 +294,7 @@ public class MainActivity extends Activity implements SensorEventListener {
    private void calcAverageInterval() {
       boolean previousTimeSet = false;
       long previousTime = 0;
-      long interval;
+      long totalInterval = 0;
 
       // Get all the times in plot
       for (Long currentTime : peeksMap.keySet()) {
@@ -294,10 +305,8 @@ public class MainActivity extends Activity implements SensorEventListener {
          }
          // Subsequent times in plot
          else {
-            interval = currentTime - previousTime;
+            totalInterval += currentTime - previousTime;
             previousTime = currentTime;
-
-            totalInterval += interval;
          }
       }
 
@@ -305,5 +314,103 @@ public class MainActivity extends Activity implements SensorEventListener {
 
       // Number of intervals = peeksMap.size() - 1
        averageInterval = totalInterval / (peeksMap.size() - 1);
+   }
+
+   // Perform beat detection in the background w/o thread manipulation
+   private class BeatDetectionTask extends AsyncTask<LinkedHashMap<Long, Double>, Void, Void> {
+      private LinkedHashMap<Long, Double> allPoints;
+      public LinkedHashMap<Long, Double> peeks;
+
+      public BeatDetectionTask(LinkedHashMap<Long, Double> graphMap, LinkedHashMap<Long, Double> peekMap) {
+         this.allPoints = new LinkedHashMap<>(graphMap);
+         this.peeks = new LinkedHashMap<>(peekMap);
+      }
+
+      @Override
+      protected Void doInBackground(LinkedHashMap<Long, Double>... map) {
+         peeks = zScoreAlgorithm(allPoints, peeks, LAST_N_SIZE, 3.5, .1);
+
+         return null;
+      }
+
+      @Override
+      protected void onProgressUpdate(Void... progress) {}
+
+      @Override
+      protected void onPreExecute() {}
+
+      @Override
+      protected void onPostExecute(Void result) {}
+   }
+
+   private LinkedHashMap<Long, Double> zScoreAlgorithm(LinkedHashMap<Long, Double> allPoints, LinkedHashMap<Long, Double> peeks, int lag, Double threshold, Double influence) {
+      // Init stats instance
+      //SummaryStatistics stats = new SummaryStatistics();
+
+      List<Long> times = new ArrayList<>(allPoints.keySet());
+      List<Double> accelerations = new ArrayList<>(allPoints.values());
+
+      List<Double> filteredY = new ArrayList<>(accelerations);                                      // Filter out signals (peaks) from our original list (using influence arg)
+      List<Double> avgFilter = new ArrayList<>(Collections.nCopies(accelerations.size(), 0.0d)); // Current average of rolling window
+      List<Double> stdFilter = new ArrayList<>(Collections.nCopies(accelerations.size(), 0.0d)); // Current standard deviation of rolling window
+
+      avgFilter.add(lag, calcMean(accelerations.subList(0, lag)));
+      stdFilter.add(lag, calcStandardDeviation(accelerations.subList(0, lag)));
+      //stats.clear();
+
+      for (int index = lag + 1; index < accelerations.size(); index++) {
+         Log.d("CHECKING", Double.toString(accelerations.get(index)));
+
+         // Distance between current value and average is enough standard deviations (threshold) away
+         if (Math.abs(accelerations.get(index) - avgFilter.get(index - 1)) > threshold * stdFilter.get(index - 1)) {
+            // Positive signal
+            if (accelerations.get(index) > avgFilter.get(index - 1)) {
+               // Found a peek
+               Log.d("PEEK", Double.toString(accelerations.get(index)));
+               peeks.put(times.get(index), accelerations.get(index));
+            }
+
+            // Lower influence
+            filteredY.add(index, influence * accelerations.get(index) + (1 - influence) * filteredY.get(index - 1));
+         } else {
+            filteredY.set(index, accelerations.get(index));
+         }
+
+         // Update rolling average and deviation
+         avgFilter.set(index, calcMean(filteredY.subList(index - lag, index)));
+         stdFilter.set(index, calcStandardDeviation(filteredY.subList(index - lag, index)));
+      }
+
+      return peeks;
+   }
+
+   private double calcMean(List<Double> list) {
+      double total = 0;
+
+      // Calculate sum
+      for (double value : list) {
+         total += value;
+      }
+
+      return total / list.size();
+   }
+
+   // Standard deviation calculation: https://www.easycalculation.com/statistics/standard-deviation.php
+   private double calcStandardDeviation(List<Double> list) {
+      double mean = calcMean(list);
+      double squaredDiff;
+      double variance = 0;
+
+      // Find variance
+      for (int index = 0; index < list.size(); index++) {
+         squaredDiff = list.set(index, Math.pow(list.get(index) - mean, 2));
+
+         variance += squaredDiff;
+      }
+
+      variance = variance / list.size() - 1;
+
+      // Square root of variance is standard deviation
+      return Math.sqrt(variance);
    }
 }
