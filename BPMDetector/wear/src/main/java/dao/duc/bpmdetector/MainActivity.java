@@ -20,7 +20,10 @@ import android.app.Activity;
 import android.hardware.Sensor;
 
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,8 +49,6 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
    private double totalAcceleration; // Total linear acceleration, calc-ed from axises
 
-   private ArrayBlockingQueue<Long> lastTimes;           // Used to determine when to plot time in plot
-   private ArrayBlockingQueue<Double> lastAccelerations; // Used to determine when to plot acceleration in plot
    private LinkedHashMap<Long, Double> graphMap;         // Graph representing all values in time vs acceleration
    private LinkedHashMap<Long, Double> peeksMap;         // Graph representing peek time vs acceleration
 
@@ -56,6 +57,8 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
    private boolean detectionOn; // Flag determining if calculation should start
    private boolean save;        // Whether to save the latest detection or not
+
+   private List<DetectionData> detectionData;
 
    // UI elements
    private Button startButton;
@@ -99,10 +102,17 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
       // Get user's choice on whether to save the latest detection information
       if (requestCode == 1 && resultCode == RESULT_OK) {
-         data.getBooleanExtra("save", save);
+         save = data.getBooleanExtra("save", false);
+         addDetectionData((long) 100.00);
+         updateUI();
       }
 
-      Log.d("SAVE", Boolean.toString(save));
+      Log.d("SAVE", Boolean.toString(this.save));
+   }
+
+   public void addDetectionData(Long time) {
+      detectionData.add(new DetectionData(this.bpm, time,
+              new SimpleDateFormat("HHmmss_MMddyyyy").format(Calendar.getInstance().getTime())));
    }
 
    public void initializeGlobals() {
@@ -114,10 +124,10 @@ public class MainActivity extends WearableActivity implements SensorEventListene
       bpm = 0;
       detectionOn = false;
 
-      lastTimes = new ArrayBlockingQueue(LAST_N_SIZE);
-      lastAccelerations = new ArrayBlockingQueue(LAST_N_SIZE);
       graphMap = new LinkedHashMap<>();
       peeksMap = new LinkedHashMap<>();
+
+      detectionData = new ArrayList<>();
    }
 
    public void initializeStartButton() {
@@ -194,67 +204,6 @@ public class MainActivity extends WearableActivity implements SensorEventListene
       }
    }
 
-   /*private void addToProcessingQueues(long time, double acceleration) throws InterruptedException {
-      // Add another point for beat detection
-      try {
-         lastTimes.add(time);
-         lastAccelerations.add(acceleration);
-      }
-      // Remove time and its acceleration from queue to make room for new one
-      catch (IllegalStateException e) {
-         e.printStackTrace();
-      }
-      // Run beat detection only if the queue is full
-      finally {
-         if (lastTimes.remainingCapacity() == 0) {
-            beatDetection(time, acceleration);
-         }
-      }
-   }
-
-   private void beatDetection(long time, double acceleration) {
-      if (isPeek()) {
-         peeksMap.put(time, acceleration);
-      }
-
-      // Remove queue's head to make room for another addition
-      if (lastTimes.poll() == null || lastAccelerations.poll() == null) {
-         Log.d("POLL", "Removing value from queue results in null");
-      }
-   }
-
-   // TODO: Continue peek detection
-   private boolean isPeek() {
-      // Convert queue to ArrayList so we can iterate through it
-      List<Double> accelerations = Arrays.asList(lastAccelerations.toArray(new Double[0]));
-      double previousAcceleration, currentAcceleration, nextAcceleration;
-
-      // Start at one so that the previous acceleration is the first one
-      for (int index = 1; index < accelerations.size(); index++) {
-         previousAcceleration = accelerations.get(index - 1);
-         currentAcceleration = accelerations.get(index);
-
-         Log.d("CURRENT ACCELERATION", Double.toString(currentAcceleration));
-
-         // Set next acceleration only if it's not the last one
-         if (index < accelerations.size() - 1) {
-            nextAcceleration = accelerations.get(index + 1);
-         }
-         // Reached end of list, peek not found
-         else {
-            return false;
-         }
-
-         // Look for peek
-         if (currentAcceleration > previousAcceleration && currentAcceleration > nextAcceleration) {
-            Log.d("PEEK", "Found peek of " + Double.toString(currentAcceleration));
-            return true;
-         }
-      }
-
-      return false;
-   }*/
-
    private void updateUI() {
       DecimalFormat formatter = new DecimalFormat("#0.00000");
 
@@ -286,7 +235,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
          detectionOn = true;
       }
       else {
-         startActivity(new Intent(MainActivity.this, ConfirmationActivity.class));
+         startActivityForResult(new Intent(this, ConfirmationActivity.class), 1);
          setButtonAttributes(startButton, "DETECT", "#212121");
          detectionOn = false;
       }
