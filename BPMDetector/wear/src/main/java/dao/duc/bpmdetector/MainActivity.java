@@ -8,6 +8,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.wear.widget.WearableRecyclerView;
 import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
@@ -38,7 +40,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
    final static int YAXIS = 1;
    final static int ZAXIS = 2;
    final static double SECONDS_PER_MINUTE = 60.0;
-   final static int LAST_N_SIZE = 5;
+   final static int LAST_N_SIZE = 20;
 
    private double xAxis; // Current linear acceleration in x axis
    private double yAxis; // Current linear acceleration in y axis
@@ -49,8 +51,8 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
    private double totalAcceleration; // Total linear acceleration, calc-ed from axises
 
-   private LinkedHashMap<Long, Double> graphMap;         // Graph representing all values in time vs acceleration
-   private LinkedHashMap<Long, Double> peeksMap;         // Graph representing peek time vs acceleration
+   private LinkedHashMap<Long, Double> graphMap; // Graph representing all values in time vs acceleration
+   private LinkedHashMap<Long, Double> peeksMap; // Graph representing peek time vs acceleration
 
    private double averageInterval; // Average interval between each beat
    private double bpm;             // Beats per minute
@@ -71,6 +73,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
    private WearableRecyclerView pastDetections;
 
+
    protected void onCreate(Bundle savedInstanceState) {
       // Keep the Wear screen always on (for testing only!)
       getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -83,14 +86,9 @@ public class MainActivity extends WearableActivity implements SensorEventListene
       this.mLinearAcceleration = mSensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
 
       // Link labels with TextViews from activity_main.xml
-      //xAxisLabel = findViewById(R.id.xAxisView);
-      //yAxisLabel = findViewById(R.id.yAxisView);
-      //zAxisLabel = findViewById(R.id.zAxisView);
       totalAccelerationLabel = findViewById(R.id.totalAccelerationView);
       timesLabel = findViewById(R.id.timesView);
       bpmLabel = findViewById(R.id.bpmView);
-
-      pastDetections = findViewById(R.id.recyclerLauncherView);
 
       initializeGlobals();
       initializeStartButton();
@@ -110,9 +108,22 @@ public class MainActivity extends WearableActivity implements SensorEventListene
       Log.d("SAVE", Boolean.toString(this.save));
    }
 
+   public void setDetectionListUI() {
+      //pastDetections = findViewById(R.id.recyclerLauncherView);
+      LinearLayoutManager llm = new LinearLayoutManager(this);
+      llm.setOrientation(LinearLayoutManager.VERTICAL);
+      pastDetections.setLayoutManager(llm);
+      pastDetections.setHasFixedSize(true);
+      updateDetectionUI();
+   }
+
+   public void updateDetectionUI() {
+      pastDetections.setAdapter(new DetectionListAdapter(detectionData));
+   }
+
    public void addDetectionData(Long time) {
       detectionData.add(new DetectionData(this.bpm, time,
-              new SimpleDateFormat("HHmmss_MMddyyyy").format(Calendar.getInstance().getTime())));
+              new SimpleDateFormat("HHmmss, MMddyyyy").format(Calendar.getInstance().getTime())));
    }
 
    public void initializeGlobals() {
@@ -179,24 +190,22 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
             // Start beat detection and find peeks
             if (graphMap.size() > LAST_N_SIZE) {
-               Log.d("TOTAL ACCELERATION", Double.toString(totalAcceleration) + " " + Double.toString(currentTime));
+               //Log.d("TOTAL ACCELERATION", Double.toString(totalAcceleration) + " " + Double.toString(currentTime));
 
                BeatDetectionTask beatDetectionTask = new BeatDetectionTask(this.graphMap, this.peeksMap);
                beatDetectionTask.execute();
 
                peeksMap = new LinkedHashMap<>(beatDetectionTask.peeks);
-               graphMap.clear();
+               //graphMap.clear();
                calcBPM();
             }
-
-            //Log.d("TOTAL ACCELERATION", Double.toString(totalAcceleration));
          }
          // Not moving
          else {
             totalAcceleration = 0;
          }
 
-         Log.d("UP", "DATE");
+         calcBPM();
          updateUI();
       }
       else{
@@ -205,9 +214,9 @@ public class MainActivity extends WearableActivity implements SensorEventListene
    }
 
    private void updateUI() {
-      DecimalFormat formatter = new DecimalFormat("#0.00000");
+      DecimalFormat formatter = new DecimalFormat("#0.000");
 
-      String totalAccelerationDisplay = "Total A: " + formatter.format(totalAcceleration);
+      String totalAccelerationDisplay = "Total A: " + formatter.format(totalAcceleration) + " m/s";
       String timeDisplay = "Time: " +
          Double.toString(TimeUnit.MILLISECONDS.
          convert(currentTime, TimeUnit.NANOSECONDS) / 1000.000) + "s";
@@ -235,7 +244,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
          detectionOn = true;
       }
       else {
-         startActivityForResult(new Intent(this, ConfirmationActivity.class), 1);
+         startActivityForResult(new Intent(this, QuerySaveActivity.class), 1);
          setButtonAttributes(startButton, "DETECT", "#212121");
          detectionOn = false;
       }
@@ -327,14 +336,14 @@ public class MainActivity extends WearableActivity implements SensorEventListene
       //stats.clear();
 
       for (int index = lag + 1; index < accelerations.size(); index++) {
-         Log.d("CHECKING", Double.toString(accelerations.get(index)));
+         //Log.d("CHECKING", Double.toString(accelerations.get(index)));
 
          // Distance between current value and average is enough standard deviations (threshold) away
          if (Math.abs(accelerations.get(index) - avgFilter.get(index - 1)) > threshold * stdFilter.get(index - 1)) {
             // Found a peek
             if (accelerations.get(index) > avgFilter.get(index - 1)) {
                Log.d("PEEK", Double.toString(accelerations.get(index)));
-               peeks.put(times.get(index), accelerations.get(index));
+               this.peeksMap.put(times.get(index), accelerations.get(index));
             }
 
             // Filter this signal using influence

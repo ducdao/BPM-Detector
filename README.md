@@ -26,3 +26,6 @@ BPM Detector was created for Duc Dao's senior project at [Cal Poly](http://calpo
 ![BPM-D screenshot](Screenshots/bpm9.png?raw=true)
 ### Confirmation Page for Saving Latest Detection Information
 ![BPM-D screenshot](Screenshots/bpm10.png?raw=true)
+### UI Changes
+![BPM-D screenshot](Screenshots/bpm11.png?raw=true)
+![BPM-D screenshot](Screenshots/bpm12.png?raw=true)

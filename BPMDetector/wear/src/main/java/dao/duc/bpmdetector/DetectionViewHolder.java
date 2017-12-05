@@ -13,6 +13,6 @@ public class DetectionViewHolder extends RecyclerView.ViewHolder {
 
    DetectionViewHolder(View itemView) {
       super(itemView);
-      detectionLabel = itemView.findViewById(R.id.detectionView);
+      //detectionLabel = itemView.findViewById(R.id.detectionView);
    }
 }

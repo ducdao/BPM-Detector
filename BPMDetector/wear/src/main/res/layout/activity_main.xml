@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/dark_blue">
-
-    <LinearLayout
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
@@ -27,36 +22,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
-            android:gravity="center"/>
+            android:gravity="center"
+            android:textSize="10sp"/>
         <TextView
             android:id="@+id/timesView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
-            android:gravity="center"/>
+            android:gravity="center"
+            android:textSize="12sp"/>
         <TextView
             android:id="@+id/bpmView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
             android:gravity="center"
-            android:textSize="18sp"/>
-
-        <android.support.wear.widget.WearableRecyclerView
-            xmlns:android="http://schemas.android.com/apk/res/android"
-            xmlns:tools="http://schemas.android.com/tools"
-            android:id="@+id/recyclerLauncherView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scrollbars="vertical">
-            <TextView
-                android:id="@+id/detectionView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/white"
-                android:gravity="center"
-                android:textSize="14sp"/>
-        </android.support.wear.widget.WearableRecyclerView>
-    </LinearLayout>
-</ScrollView>
+            android:textSize="24sp"/>
+</LinearLayout>
 
