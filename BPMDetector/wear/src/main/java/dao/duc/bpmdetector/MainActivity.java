@@ -196,8 +196,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                beatDetectionTask.execute();
 
                peeksMap = new LinkedHashMap<>(beatDetectionTask.peeks);
-               //graphMap.clear();
-               calcBPM();
+               graphMap.clear();
             }
          }
          // Not moving
@@ -227,23 +226,16 @@ public class MainActivity extends WearableActivity implements SensorEventListene
       bpmLabel.setText(bpmDisplay);
    }
 
-   // Debugging method that prints the X, Y, and Z values
-   private void printXYZUI() {
-      //String xDisplay = "X-Axis: " + formatter.format(xAxis);
-      //String yDisplay = "Y-Axis: " + formatter.format(yAxis);
-      //String zDisplay = "Z-Axis: " + formatter.format(zAxis);
-
-      //xAxisLabel.setText(xDisplay);
-      //yAxisLabel.setText(yDisplay);
-      //zAxisLabel.setText(zDisplay);
-   }
-
    private void startDetection(View v) {
       if (!detectionOn) {
+         bpm = 0;
+         updateUI();
          setButtonAttributes(startButton, "STOP", "#F44336");
          detectionOn = true;
       }
       else {
+         bpm = 130;
+         updateUI();
          startActivityForResult(new Intent(this, QuerySaveActivity.class), 1);
          setButtonAttributes(startButton, "DETECT", "#212121");
          detectionOn = false;
