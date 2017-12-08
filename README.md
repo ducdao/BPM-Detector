@@ -11,21 +11,21 @@ BPM Detector was created for Duc Dao's senior project at [Cal Poly](http://calpo
 
 ## Development Screenshots
 ### Accelerometer - Linear Aceeleration in X, Y, and Z Axes  
-![BPM-D screenshot](Screenshots/bpm1.png?raw=true)
-![BPM-D screenshot](Screenshots/bpm2.png?raw=true)
+![BPM-D screenshot](Images/bpm1.png?raw=true)
+![BPM-D screenshot](Images/bpm2.png?raw=true)
 ### Start Detection Time + Duration of Detection
-![BPM-D screenshot](Screenshots/bpm3.png?raw=true)
-![BPM-D screenshot](Screenshots/bpm4.png?raw=true)
+![BPM-D screenshot](Images/bpm3.png?raw=true)
+![BPM-D screenshot](Images/bpm4.png?raw=true)
 ### Calculated Total Acceleration
-![BPM-D screenshot](Screenshots/bpm5.png?raw=true)
-![BPM-D screenshot](Screenshots/bpm6.png?raw=true)
+![BPM-D screenshot](Images/bpm5.png?raw=true)
+![BPM-D screenshot](Images/bpm6.png?raw=true)
 ### Started BPM Calculation
-![BPM-D screenshot](Screenshots/bpm7.png?raw=true)
+![BPM-D screenshot](Images/bpm7.png?raw=true)
 ### Removed X, Y, Z Values from UI
-![BPM-D screenshot](Screenshots/bpm8.png?raw=true)
-![BPM-D screenshot](Screenshots/bpm9.png?raw=true)
+![BPM-D screenshot](Images/bpm8.png?raw=true)
+![BPM-D screenshot](Images/bpm9.png?raw=true)
 ### Confirmation Page for Saving Latest Detection Information
-![BPM-D screenshot](Screenshots/bpm10.png?raw=true)
+![BPM-D screenshot](Images/bpm10.png?raw=true)
 ### UI Changes
-![BPM-D screenshot](Screenshots/bpm11.png?raw=true)
-![BPM-D screenshot](Screenshots/bpm12.png?raw=true)
+![BPM-D screenshot](Images/bpm11.png?raw=true)
+![BPM-D screenshot](Images/bpm12.png?raw=true)
