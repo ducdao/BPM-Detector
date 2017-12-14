@@ -7,7 +7,7 @@ is to provide a tool for concert and marching band conductors to detect their pr
 while conducting. This will help them determine how well they are coordinating the band and 
 whether they need to adjust their conducting.
 
-BPM Detector was created for Duc Dao's senior project at [Cal Poly](http://calpoly.edu/).
+BPM Detector was originally created for Duc Dao's senior project at [Cal Poly](http://calpoly.edu/).
 
 ## Development Screenshots
 ### Accelerometer - Linear Aceeleration in X, Y, and Z Axes  
