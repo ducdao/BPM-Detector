@@ -1,3 +1,7 @@
 <resources>
-    <string name="app_name">BPMDetector</string>
+    <string name="app_name">BPM Detector</string>
+    <string name="first_tab_name">DETECT</string>
+    <string name="second_tab_name">HISTORY</string>
+    <string name="third_tab_name">STATS</string>
+    <string name="action_settings">Settings</string>
 </resources>

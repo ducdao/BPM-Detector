@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.view.ViewPager
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/tabView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="dao.duc.bpmdetector.MainActivity">
+
+    <Button
+        android:id="@+id/detectButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:gravity="center"
+        android:onClick="calcBPM"/>
+
+    <TextView
+        android:id="@+id/xAxisLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorAccent"
+        android:gravity="center"/>
+    <TextView
+        android:id="@+id/yAxisLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorAccent"
+        android:gravity="center"/>
+    <TextView
+        android:id="@+id/zAxisLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorAccent"
+        android:gravity="center"/>
+    <TextView
+        android:id="@+id/totalAccelerationLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/colorPrimary"
+        android:gravity="center"/>
+
+</android.support.v4.view.ViewPager>
