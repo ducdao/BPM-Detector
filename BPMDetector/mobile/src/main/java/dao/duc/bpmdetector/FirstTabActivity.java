@@ -7,17 +7,17 @@ package dao.duc.bpmdetector;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.TextView;
 
 public class FirstTabActivity extends Fragment {
    private View rootView;
-   private Button detectFAB;
+   private FloatingActionButton detectFAB;
+   private TextView detectLabel;
    private boolean detectionOn;
 
    public FirstTabActivity() {
@@ -28,18 +28,18 @@ public class FirstTabActivity extends Fragment {
    public View onCreateView(LayoutInflater inflater, ViewGroup container,
                             Bundle savedInstanceState) {
       this.rootView = inflater.inflate(R.layout.first_tab, container, false);
-      //initializeButton();
       initializeFAB();
       return this.rootView;
    }
 
    private void initializeFAB() {
-      FloatingActionButton fab = this.rootView.findViewById(R.id.fab);
-      fab.setOnClickListener(new View.OnClickListener() {
+      this.detectLabel = this.rootView.findViewById(R.id.detect_label);
+
+      this.detectFAB = this.rootView.findViewById(R.id.fab);
+      this.detectFAB.setOnClickListener(new View.OnClickListener() {
          @Override
          public void onClick(View view) {
-            Snackbar.make(view, "Detection", Snackbar.LENGTH_LONG)
-                    .setAction("Action", null).show();
+            detect();
          }
       });
    }
@@ -47,20 +47,19 @@ public class FirstTabActivity extends Fragment {
    public void detect() {
       // Start detection
       if (!this.detectionOn) {
-         setButtonAttributes("STOP", "#F44336");
+         setButtonAttributes("Detecting!", "#F44336");
          detectionOn = true;
       }
       // End detection
       else {
-         setButtonAttributes("DETECT", "#212121");
+         setButtonAttributes("Ready to detect!", "#212121");
          detectionOn = false;
       }
    }
 
    public void setButtonAttributes(String text, String hexColor) {
-      detectFAB.getBackground().
+      this.detectFAB.getBackground().
               setColorFilter(Color.parseColor(hexColor), PorterDuff.Mode.MULTIPLY);
-      detectFAB.setText(text);
-      detectFAB.setAllCaps(true);
+      this.detectLabel.setText(text);
    }
 }
